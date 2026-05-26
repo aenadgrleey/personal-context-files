@@ -1,0 +1,22 @@
+version: 1
+# No agents are defined in this collection.
+agents:
+  - plain
+defaults:
+  on_target_modified: fail
+rules:
+  # Agent-oriented commit writing with model trailer support.
+  - id: commit
+    source: skills/commit
+    schema_agent: pi
+    kind: skill
+  # Reviewer-focused GitHub PR creation via gh.
+  - id: github-pr
+    source: skills/github-pr
+    schema_agent: pi
+    kind: skill
+  # User-callable wrapper that commits first, then opens the GitHub PR.
+  - id: yeet
+    source: skills/yeet
+    schema_agent: pi
+    kind: skill

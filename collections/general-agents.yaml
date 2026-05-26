@@ -1,0 +1,23 @@
+version: 1
+# No agents are defined in this collection.
+agents:
+- plain
+defaults:
+  on_target_modified: fail
+rules:
+# Create skills from existing procedures.
+- id: write-a-skill
+  source:
+    github: mattpocock/skills
+    ref: b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8
+    path: skills/productivity/write-a-skill
+  schema_agent: plain
+  kind: skill
+# Ultra-compact response mode skill.
+- id: caveman
+  source:
+    github: mattpocock/skills
+    ref: b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8
+    path: skills/productivity/caveman
+  schema_agent: plain
+  kind: skill

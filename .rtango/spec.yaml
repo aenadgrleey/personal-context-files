@@ -1,0 +1,89 @@
+version: 1
+agents:
+  - plain
+defaults:
+  on_target_modified: fail
+  gitignore_targets: true
+rules:
+  - id: pi-android-sandbox
+    source: skills/pi-android-sandbox
+    schema_agent: pi
+    kind: skill
+  - id: pi-extension-development
+    source: skills/pi-extension-development
+    schema_agent: pi
+    kind: skill
+  - id: rtango
+    source: skills/rtango
+    schema_agent: pi
+    kind: skill
+  - id: commit
+    source: skills/commit
+    schema_agent: pi
+    kind: skill
+  - id: android-mvi-boilerplate
+    source: skills/android-mvi-boilerplate
+    schema_agent: pi
+    kind: skill
+  - id: compose-slot-api
+    source: skills/compose-slot-api
+    schema_agent: pi
+    kind: skill
+  - id: github-pr
+    source: skills/github-pr
+    schema_agent: pi
+    kind: skill
+  - id: gitlab-mr
+    source: skills/gitlab-mr
+    schema_agent: pi
+    kind: skill
+  - id: yeet
+    source: skills/yeet
+    schema_agent: pi
+    kind: skill
+
+    # collections/general-agents
+  - id: write-a-skill
+    source:
+      github: mattpocock/skills
+      ref: b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8
+      path: skills/productivity/write-a-skill
+    schema_agent: plain
+    kind: skill
+  - id: caveman
+    source:
+      github: mattpocock/skills
+      ref: b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8
+      path: skills/productivity/caveman
+    schema_agent: plain
+    kind: skill
+
+    # collections/general-engineering
+  - id: karpathy-guidelines
+    source:
+      github: forrestchang/andrej-karpathy-skills
+      ref: 2c606141936f1eeef17fa3043a72095b4765b9c2
+      path: skills/karpathy-guidelines
+    schema_agent: plain
+    kind: skill
+  - id: spec-driven-development
+    source:
+      github: addyosmani/agent-skills
+      ref: main
+      path: skills/spec-driven-development
+    schema_agent: plain
+    kind: skill
+  - id: tdd
+    source:
+      github: mattpocock/skills
+      ref: b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8
+      path: skills/engineering/tdd
+    schema_agent: plain
+    kind: skill
+  - id: zoom-out
+    source:
+      github: mattpocock/skills
+      ref: b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8
+      path: skills/engineering/zoom-out
+    schema_agent: plain
+    kind: skill

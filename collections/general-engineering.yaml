@@ -1,0 +1,39 @@
+version: 1
+# No agents are defined in this collection.
+agents:
+- plain
+defaults:
+  on_target_modified: fail
+rules:
+# Behavioral guardrails for coding and refactoring.
+- id: karpathy-guidelines
+  source:
+    github: forrestchang/andrej-karpathy-skills
+    ref: 2c606141936f1eeef17fa3043a72095b4765b9c2
+    path: skills/karpathy-guidelines
+  schema_agent: plain
+  kind: skill
+# Spec-first workflow for larger changes.
+- id: spec-driven-development
+  source:
+    github: addyosmani/agent-skills
+    ref: main
+    path: skills/spec-driven-development
+  schema_agent: plain
+  kind: skill
+# Test-first workflow with tracer bullets.
+- id: tdd
+  source:
+    github: mattpocock/skills
+    ref: b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8
+    path: skills/engineering/tdd
+  schema_agent: plain
+  kind: skill
+# Broader-context / architecture mapping skill.
+- id: zoom-out
+  source:
+    github: mattpocock/skills
+    ref: b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8
+    path: skills/engineering/zoom-out
+  schema_agent: plain
+  kind: skill

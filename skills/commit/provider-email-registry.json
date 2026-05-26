@@ -1,0 +1,78 @@
+{
+  "note": "Project-local registry for Co-authored-by provider emails. These are commit-footer conventions, not guaranteed inboxes or GitHub identities.",
+  "fallback": {
+    "type": "synthetic-model-email",
+    "format": "<sanitized-model-name>@models.pi.local",
+    "sanitization": "Replace characters outside [A-Za-z0-9._-] with -"
+  },
+  "providers": {
+    "anthropic": {
+      "email": "noreply@anthropic.com",
+      "matchers": ["claude"]
+    },
+    "openai": {
+      "email": "noreply@openai.com",
+      "matchers": ["openai-codex", "codex", "gpt", "o1", "o3", "o4"]
+    },
+    "google": {
+      "email": "noreply@google.com",
+      "matchers": ["gemini", "vertexai", "google-vertexai"]
+    },
+    "xai": {
+      "email": "noreply@x.ai",
+      "matchers": ["grok"]
+    },
+    "meta": {
+      "email": "noreply@meta.com",
+      "matchers": ["llama"]
+    },
+    "mistral": {
+      "email": "noreply@mistral.ai",
+      "matchers": ["codestral", "ministral"]
+    },
+    "cohere": {
+      "email": "noreply@cohere.com",
+      "matchers": ["command", "aya"]
+    },
+    "deepseek": {
+      "email": "noreply@deepseek.com",
+      "matchers": ["deepseek-r1", "deepseek-v3"]
+    },
+    "alibaba": {
+      "email": "noreply@alibaba-inc.com",
+      "matchers": ["qwen", "tongyi", "dashscope", "alibaba-cloud"]
+    },
+    "moonshot": {
+      "email": "noreply@moonshot.cn",
+      "matchers": ["kimi"]
+    },
+    "zhipu": {
+      "email": "noreply@zhipuai.cn",
+      "matchers": ["glm", "chatglm"]
+    },
+    "baidu": {
+      "email": "noreply@baidu.com",
+      "matchers": ["ernie", "wenxin"]
+    },
+    "tencent": {
+      "email": "noreply@tencent.com",
+      "matchers": ["hunyuan"]
+    },
+    "01-ai": {
+      "email": "noreply@01.ai",
+      "matchers": ["yi"]
+    },
+    "minimax": {
+      "email": "noreply@minimax.chat",
+      "matchers": ["abab", "hailuo"]
+    },
+    "baichuan": {
+      "email": "noreply@baichuan-ai.com",
+      "matchers": []
+    },
+    "stepfun": {
+      "email": "noreply@stepfun.com",
+      "matchers": ["step"]
+    }
+  }
+}

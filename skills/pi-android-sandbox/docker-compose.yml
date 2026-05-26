@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  pi-sb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pi-sandbox
+    env_file:
+      - .env
+    volumes:
+      # Mount pi configuration
+      - ${HOME}/.pi:/home/pi/.pi
+      
+      # Mount Android SDK and JDK from the host using standard environment variables if present
+      # Fallback to standard locations if not set
+      - ${ANDROID_HOME:-${HOME}/Library/Android/sdk}:/android-sdk:ro
+      - ${JAVA_HOME:-/Users/aenadgrleey/Applications/Android Studio.app/Contents/jbr/Contents/Home}:/jdk:ro
+      
+      # Store Gradle caches inside a Docker named volume (keeps it in the container setup)
+      - gradle-cache:/home/pi/.gradle
+      
+      # Mount the actual project workspace dynamically from where the command is run
+      - ${PWD}:/workspace
+      
+    # Execute as the non-root user created in the Dockerfile
+    user: "1000:1000"
+
+volumes:
+  # Named volume for Gradle caching
+  gradle-cache:

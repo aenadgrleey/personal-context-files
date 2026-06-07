@@ -1,0 +1,101 @@
+version: 1
+# Official creator-managed GrepAI skills for daily local code search.
+# Upstream: https://github.com/yoanbernabeu/grepai-skills
+# Docs: https://yoanbernabeu.github.io/grepai/skills/
+# Scope: intentionally lean. Includes repo initialization and ignore-pattern setup,
+# but excludes installation, embedding provider setup, MCP/editor setup, heavyweight
+# storage backends, and broader workspace/config skills.
+# Storage choice: GOB local file storage for a simple, reliable, single-machine setup.
+agents:
+  - plain
+defaults:
+  on_target_modified: fail
+rules:
+  # Repo setup
+  - id: grepai-init
+    source:
+      github: yoanbernabeu/grepai-skills
+      ref: 382d40261c0d41109c6e11872574ba0be9b064d0
+      path: skills/configuration/grepai-init
+    schema_agent: plain
+    kind: skill
+  - id: grepai-ignore-patterns
+    source:
+      github: yoanbernabeu/grepai-skills
+      ref: 382d40261c0d41109c6e11872574ba0be9b064d0
+      path: skills/configuration/grepai-ignore-patterns
+    schema_agent: plain
+    kind: skill
+
+  # Indexing
+  - id: grepai-watch-daemon
+    source:
+      github: yoanbernabeu/grepai-skills
+      ref: 382d40261c0d41109c6e11872574ba0be9b064d0
+      path: skills/indexing/grepai-watch-daemon
+    schema_agent: plain
+    kind: skill
+
+  # Search
+  - id: grepai-search-advanced
+    source:
+      github: yoanbernabeu/grepai-skills
+      ref: 382d40261c0d41109c6e11872574ba0be9b064d0
+      path: skills/search/grepai-search-advanced
+    schema_agent: plain
+    kind: skill
+  - id: grepai-search-basics
+    source:
+      github: yoanbernabeu/grepai-skills
+      ref: 382d40261c0d41109c6e11872574ba0be9b064d0
+      path: skills/search/grepai-search-basics
+    schema_agent: plain
+    kind: skill
+  - id: grepai-search-tips
+    source:
+      github: yoanbernabeu/grepai-skills
+      ref: 382d40261c0d41109c6e11872574ba0be9b064d0
+      path: skills/search/grepai-search-tips
+    schema_agent: plain
+    kind: skill
+
+  # Trace
+  - id: grepai-trace-callees
+    source:
+      github: yoanbernabeu/grepai-skills
+      ref: 382d40261c0d41109c6e11872574ba0be9b064d0
+      path: skills/trace/grepai-trace-callees
+    schema_agent: plain
+    kind: skill
+  - id: grepai-trace-callers
+    source:
+      github: yoanbernabeu/grepai-skills
+      ref: 382d40261c0d41109c6e11872574ba0be9b064d0
+      path: skills/trace/grepai-trace-callers
+    schema_agent: plain
+    kind: skill
+  - id: grepai-trace-graph
+    source:
+      github: yoanbernabeu/grepai-skills
+      ref: 382d40261c0d41109c6e11872574ba0be9b064d0
+      path: skills/trace/grepai-trace-graph
+    schema_agent: plain
+    kind: skill
+
+  # Storage backend
+  - id: grepai-storage-gob
+    source:
+      github: yoanbernabeu/grepai-skills
+      ref: 382d40261c0d41109c6e11872574ba0be9b064d0
+      path: skills/storage/grepai-storage-gob
+    schema_agent: plain
+    kind: skill
+
+  # Troubleshooting
+  - id: grepai-troubleshooting
+    source:
+      github: yoanbernabeu/grepai-skills
+      ref: 382d40261c0d41109c6e11872574ba0be9b064d0
+      path: skills/advanced/grepai-troubleshooting
+    schema_agent: plain
+    kind: skill

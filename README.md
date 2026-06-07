@@ -74,6 +74,13 @@ Curated upstream general-purpose agent skills (`collections/general-agents.yaml`
 
 Curated upstream engineering workflow skills (`collections/general-engineering.yaml`).
 
+### `grepai`
+
+Lean official GrepAI skills for repo initialization plus daily local semantic code search:
+ignore-pattern setup, search, tracing, watch daemon, GOB local file storage, and troubleshooting
+(`collections/grepai.yaml`). Installation, embedding provider setup, MCP/editor setup, and heavier
+storage backends are intentionally excluded.
+
 ### `github`
 
 Repo-local GitHub collaboration skills: commit writing, GitHub PR creation, and the user-callable
@@ -118,7 +125,7 @@ Before importing anything, inspect the target repository:
 5. Import only the reusable assets that match the repo, and do not drop rtango guidance from the final setup.
 6. Prefer `kind: collection` for grouped imports and pin the GitHub ref when practical; use individual skill rules only when a whole collection would be overkill.
 7. Run `rtango status` then `rtango sync`.
-8. Install only the missing Pi package assets via `pi install`, ensure `.pi/checks.yaml` is present.
+8. Install only the missing Pi package assets via `pi install`.
 9. Leave a short summary of what was enabled, skipped, and why.
 
 ### What not to do

@@ -16,6 +16,7 @@ Read this README first for bootstrap/import guidance.
 - reusable skills in `skills/`
 - curated collections in `collections/`
 - agent prompt templates in `agents/`
+- Pi checks in `checks.yaml`
 - rtango skill and collection inventory (this file)
 
 TypeScript extensions and tooling live in `personal-pi-extensions/`.
@@ -33,6 +34,21 @@ The agent templates in `agents/` are written for this personal Pi + Codex adapte
 Do not assume Pi's built-in `read`, `bash`, `edit`, or `write` tools are available to these
 templates, and do not use Codex adapter native `web.run` here; it is intentionally disabled in
 my setup.
+
+## Checks
+
+This repo uses Pi's root-level `checks.yaml` convention. The current check validates YAML with
+`yamllint` and the repo-local `.yamllint` config:
+
+```bash
+bash scripts/check-yaml.sh
+```
+
+Install the CLI locally with Homebrew when setting up a new machine:
+
+```bash
+brew install yamllint
+```
 
 ## Skills
 
@@ -161,6 +177,9 @@ personal-context-files/
 ├── skills/                  ← skill definitions (.md files)
 ├── collections/             ← rtango collection manifests (.yaml)
 ├── agents/                  ← agent prompt templates (*.agent.md)
+├── checks.yaml              ← Pi checks for this repo
+├── .yamllint                ← yamllint configuration
+├── scripts/check-yaml.sh    ← YAML validation script used by checks.yaml
 ├── .rtango/spec.yaml        ← rtango configuration
 ├── AGENTS.md                ← agent directory
 └── README.md                ← this file (skills + collections inventory + bootstrap guide)

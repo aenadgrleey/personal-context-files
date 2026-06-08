@@ -1,0 +1,6 @@
+# checks.yaml — declarative Pi check definitions for this repo.
+
+checks:
+  - name: yaml
+    command: bash scripts/check-yaml.sh
+    description: Validate YAML files with yamllint

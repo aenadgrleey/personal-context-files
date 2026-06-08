@@ -44,6 +44,12 @@ TypeScript extensions and tooling live in `personal-pi-extensions/`.
 - `.rtango/spec.yaml` — this repo's rtango config
 - `rtango-manifest.md` — exported skills and collections inventory
 
+### Checks
+
+- `checks.yaml` — Pi check definitions; currently runs `yamllint` over repo YAML
+- `.yamllint` — yamllint configuration for relaxed syntax validation
+- `scripts/check-yaml.sh` — YAML validation script used by `checks.yaml`
+
 ## Working Rules
 
 - Keep changes focused and minimal.
@@ -51,6 +57,7 @@ TypeScript extensions and tooling live in `personal-pi-extensions/`.
 - Treat skill `SKILL.md` files as the source of truth for their skill behavior.
 - This repo uses rtango for shared agent skills/instructions.
 - Keep reusable agent templates in plain `agents/*.agent.md`, not runtime `.pi/agents/`.
+- Keep Pi checks in root `checks.yaml`; use repo-local `.yamllint` for YAML validation.
 - Treat `rtango init` as destructive once a repo is already initialized; do not re-run it unless explicitly wanted.
 - For importing many rules from another repo, prefer `kind: collection` in `.rtango/spec.yaml` and pin the GitHub ref when practical.
 - Avoid editing generated, vendor, or local-secret files unless explicitly needed.

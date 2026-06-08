@@ -28,11 +28,11 @@ TypeScript extensions and tooling live in `personal-pi-extensions/`.
 
 ### Agent templates
 
-- `.pi/agents/planner.md`
-- `.pi/agents/reviewer.md`
-- `.pi/agents/scout.md`
-- `.pi/agents/summarizer.md`
-- `.pi/agents/worker.md`
+- `agents/planner.agent.md`
+- `agents/reviewer.agent.md`
+- `agents/scout.agent.md`
+- `agents/summarizer.agent.md`
+- `agents/worker.agent.md`
 
 ### Rtango
 
@@ -45,6 +45,7 @@ TypeScript extensions and tooling live in `personal-pi-extensions/`.
 - Update the relevant docs/specs when behavior changes.
 - Treat skill `SKILL.md` files as the source of truth for their skill behavior.
 - This repo uses rtango for shared agent skills/instructions.
+- Keep reusable agent templates in plain `agents/*.agent.md`, not runtime `.pi/agents/`.
 - Treat `rtango init` as destructive once a repo is already initialized; do not re-run it unless explicitly wanted.
 - For importing many rules from another repo, prefer `kind: collection` in `.rtango/spec.yaml` and pin the GitHub ref when practical.
 - Avoid editing generated, vendor, or local-secret files unless explicitly needed.

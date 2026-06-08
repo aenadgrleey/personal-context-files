@@ -11,7 +11,7 @@ Read this README first for bootstrap/import guidance.
 - rtango skill rules and collections (`.rtango/spec.yaml`)
 - reusable skills in `skills/`
 - curated collections in `collections/`
-- agent prompt templates in `.pi/agents/`
+- agent prompt templates in `agents/`
 - rtango skill and collection inventory (this file)
 
 TypeScript extensions and tooling live in `personal-pi-extensions/`.
@@ -142,7 +142,7 @@ Before importing anything, inspect the target repository:
 personal-context-files/
 ├── skills/                  ← skill definitions (.md files)
 ├── collections/             ← rtango collection manifests (.yaml)
-├── .pi/agents/              ← agent prompt templates (.md)
+├── agents/                  ← agent prompt templates (*.agent.md)
 ├── .rtango/spec.yaml        ← rtango configuration
 ├── AGENTS.md                ← agent directory
 └── README.md                ← this file (skills + collections inventory + bootstrap guide)

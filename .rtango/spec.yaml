@@ -41,6 +41,10 @@ rules:
     source: skills/yeet
     schema_agent: pi
     kind: skill
+  - id: subagent-orchestration
+    source: skills/subagent-orchestration
+    schema_agent: pi
+    kind: skill
 
     # collections/general-agents
   - id: write-a-skill

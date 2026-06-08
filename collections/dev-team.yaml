@@ -1,0 +1,31 @@
+version: 1
+# Personal Pi + Codex adapter dev team agents.
+# Source agents are stored in the plain rtango layout under agents/*.agent.md.
+agents:
+  - plain
+defaults:
+  on_target_modified: fail
+rules:
+  # Scout → plan → implement → review → summarize agent workflow.
+  - id: dev-team-agents
+    source: agents/
+    schema_agent: plain
+    kind: agent-set
+
+  # Commit and handoff skills used by the dev team workflow.
+  - id: commit
+    source: skills/commit
+    schema_agent: pi
+    kind: skill
+  - id: github-pr
+    source: skills/github-pr
+    schema_agent: pi
+    kind: skill
+  - id: gitlab-mr
+    source: skills/gitlab-mr
+    schema_agent: pi
+    kind: skill
+  - id: yeet
+    source: skills/yeet
+    schema_agent: pi
+    kind: skill

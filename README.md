@@ -108,6 +108,11 @@ Curated upstream general-purpose agent skills (`collections/general-agents.yaml`
 
 Curated upstream engineering workflow skills (`collections/general-engineering.yaml`).
 
+### `dev-team`
+
+Personal Pi + Codex adapter dev team (`collections/dev-team.yaml`):
+scout, planner, worker, reviewer, and summarizer agent templates plus commit/PR/MR handoff skills.
+
 ### `grepai`
 
 Lean official GrepAI skills for repo initialization plus daily local semantic code search:

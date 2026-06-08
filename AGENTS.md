@@ -27,6 +27,7 @@ TypeScript extensions and tooling live in `personal-pi-extensions/`.
 
 - `collections/general-agents.yaml` — curated upstream general-purpose agent skills
 - `collections/general-engineering.yaml` — curated upstream engineering workflow skills
+- `collections/dev-team.yaml` — personal Pi + Codex adapter team agents and handoff skills
 - `collections/grepai.yaml` — official creator-managed GrepAI semantic code search skills
 - `collections/github.yaml` — repo-local GitHub collaboration skills
 - `collections/gitlab.yaml` — repo-local GitLab collaboration skills

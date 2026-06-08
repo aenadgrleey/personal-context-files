@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: Code review — correctness, completeness, edge cases, simplicity
-tools: exec_command, web.run
+tools: exec_command, websearch, web_fetch, codesearch, context7
 inheritProjectContext: true
 defaultContext: fork
 ---

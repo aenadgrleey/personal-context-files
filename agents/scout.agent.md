@@ -1,7 +1,7 @@
 ---
 name: scout
 description: Fast codebase recon — relevant files, entry points, data flow, risks, and where to start
-tools: exec_command, web.run
+tools: exec_command, websearch, web_fetch, codesearch, context7
 inheritProjectContext: true
 defaultContext: fork
 ---

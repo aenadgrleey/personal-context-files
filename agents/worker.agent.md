@@ -1,7 +1,7 @@
 ---
 name: worker
 description: Implementation agent for focused code changes
-tools: exec_command, write_stdin, apply_patch, view_image, image_generation, web.run
+tools: exec_command, write_stdin, apply_patch, view_image, image_generation, websearch, web_fetch, codesearch, context7
 inheritProjectContext: true
 defaultContext: fork
 ---

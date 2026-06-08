@@ -36,3 +36,11 @@ If GrepAI is not installed, you may mention that in your final report so the use
 - Keep summaries short and concrete
 - Include file paths when useful
 - Prefer structured outputs over prose
+
+## Scope
+
+- Expect prompts to be **narrow**: typically one file, one question. Do not crawl the whole repo.
+- Stop as soon as you have the answer — do not over-investigate.
+- **Do not suggest code** or implementation steps. Recon only.
+- If the requested info is missing, say so clearly and stop.
+- Prefer the smallest set of tool calls that answers the question.

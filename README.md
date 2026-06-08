@@ -1,6 +1,10 @@
 # personal-context-files
 
-Rtango rules and markdown-based content for agent workflows.
+Rtango rules and markdown-based content for my personal Pi agent workflows.
+
+This repository is aligned with my Pi setup: Pi runs with the Codex adapter from
+`personal-pi-extensions`, uses Codex-style editing/shell tools, and keeps native
+Codex `web.run` disabled in favor of the separate Pi web/documentation tools.
 
 ## Entry point
 
@@ -15,6 +19,20 @@ Read this README first for bootstrap/import guidance.
 - rtango skill and collection inventory (this file)
 
 TypeScript extensions and tooling live in `personal-pi-extensions/`.
+
+## Tool alignment
+
+The agent templates in `agents/` are written for this personal Pi + Codex adapter setup.
+
+- Code reading, repository search, builds, and tests: `exec_command`
+- Interactive process stdin/polling: `write_stdin`
+- File edits: `apply_patch`
+- Local image inspection and generation: `view_image`, `image_generation`
+- Web and docs lookup: `websearch`, `web_fetch`, `codesearch`, `context7`
+
+Do not assume Pi's built-in `read`, `bash`, `edit`, or `write` tools are available to these
+templates, and do not use Codex adapter native `web.run` here; it is intentionally disabled in
+my setup.
 
 ## Skills
 

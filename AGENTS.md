@@ -3,7 +3,12 @@
 ## Purpose
 
 `personal-context-files` provides rtango rules, skill definitions, collections, and agent
-prompt templates for personal agent workflows.
+prompt templates for my personal Pi agent workflows.
+
+This repo is aligned with my Pi setup using the Codex adapter from `personal-pi-extensions`:
+agent templates should use Codex-style `exec_command` / `write_stdin` / `apply_patch` tooling
+plus the separate `websearch` / `web_fetch` / `codesearch` / `context7` tools. Native Codex
+adapter `web.run` is intentionally disabled and should not be listed in repo agent templates.
 
 TypeScript extensions and tooling live in `personal-pi-extensions/`.
 

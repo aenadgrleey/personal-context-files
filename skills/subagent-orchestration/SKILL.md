@@ -1,269 +1,387 @@
 ---
 name: subagent-orchestration
-description: Use this skill when a coding task may benefit from Pi subagents for reconnaissance, planning, implementation, review, testing, or summarization. It teaches the parent agent to delegate bounded work and synthesize results instead of duplicating subagent work.
+description: Use when a coding task may benefit from Pi subagents for recon, planning, implementation, review, or summarization. Teaches the parent agent to dispatch subagents in fresh, isolated contexts with an explicit handoff contract, scale effort to complexity, and synthesize — never duplicate — subagent work.
 ---
 
 # Subagent Orchestration
 
-## When to Use
-Use subagents when the task is non-trivial and one or more parts are:
+## Purpose
 
-- read-heavy or spread across many files;
-- likely to pollute the parent context with search output, logs, or exploratory notes;
-- independently verifiable;
-- improved by fresh context, adversarial review, or role separation;
-- safely parallelizable because the work streams are independent.
+The parent agent is the **orchestrator**. It does not read files, run searches, or write code
+itself; it decomposes the task, dispatches subagents in **isolated, fresh contexts**, evaluates
+the results against an explicit handoff contract, and synthesizes the answer for the user.
 
-Avoid subagents when the work is a tiny one-file edit, a simple local inspection, sensitive/secret handling, or write-heavy work where parallel agents may conflict.
+Subagents exist to (a) keep the parent's context clean, (b) get role-appropriate tool sets and
+thinking budgets, and (c) get an adversarial second opinion on non-trivial work. They are not a
+way to push the parent's hard work into a side window.
 
-## Core Rule
-The parent is the orchestrator and synthesizer, not a competing scout.
+## The Hard Rule: Context Isolation
 
-Delegate only bounded work. Give every subagent an objective, scope, constraints, expected output, and validation criteria. Wait for the result, judge whether it completed the contract, and either act on it, rerun a narrower task, or explicitly switch strategy.
+Every subagent dispatched by the orchestrator runs in a **fresh context window** with:
 
-For normal coding-agent work, the parent may still do small direct tasks when delegation overhead is larger than the work. For an explicitly requested **pure orchestration** mode, the parent must delegate all reading, searching, command execution, editing, testing, and validation to subagents, keeping only decomposition, todo tracking, result evaluation, and user communication in the parent context.
+- **no parent conversation** — `inherit_context: false` is mandatory on every agent template;
+- **no shared state with siblings** — sibling subagents do not see each other's outputs;
+- **no implicit access to the user's full conversation** — if a subagent needs task context,
+  the orchestrator passes it in the structured handoff contract, not via context inheritance.
 
-## Agent Registry Discipline
-Before relying on role names, inspect or know the available subagents for the current harness. Use the exact runtime identifier required by the tool, which may be the file stem rather than the display name.
+If `inherit_context: true` appears on any agent template, it is a bug. Audit and fix before
+dispatch. If the harness does not support `inherit_context`, set it explicitly anyway so the
+contract is documented.
 
-Maintain a small mental registry:
+## The 5 Orchestrator Responsibilities
 
-- **Researcher / Scout / Explore**: read-only discovery, pattern extraction, dependency mapping.
-- **Planner**: phased implementation plan from gathered context.
-- **Worker / SWE**: bounded implementation, file edits, terminal commands, tests.
-- **Reviewer**: read-only validation, spec compliance, regressions, edge cases.
-- **Summarizer**: compresses long findings or logs.
+1. **Select dynamically.** Do not run the full pipeline for trivial queries. A 1-tool-call
+   lookup does not need a planner, a worker, and a reviewer. Match the pipeline to the task.
 
-Do not use a reviewer for initial research. Do not ask a worker to rediscover the whole codebase if a researcher already produced structured findings.
+2. **Partition the problem space deliberately.** If the task has N distinct aspects, the plan
+   must address all N with no gaps. Partitioning by role is not enough — partition by
+   *concern* and verify the union of partitions covers the original request.
 
-## Standard Workflow
-1. Decide whether delegation is worth the overhead.
-2. Choose the smallest useful role:
-   - **Scout / Explore**: read-only codebase reconnaissance; returns relevant files, current flow, risks, and where to edit.
-   - **Planner**: turns context into a phased implementation plan.
-   - **Worker**: makes bounded edits after the plan and scope are clear.
-   - **Reviewer**: fresh-context review for correctness, edge cases, compatibility, and simplicity.
-   - **Summarizer**: compresses findings, logs, or long discussions.
-3. Prompt the subagent with an explicit contract.
-4. Do not do the same reconnaissance in parallel in the parent unless you announce a strategy switch.
-5. Validate the subagent result:
-   - Treat “shallow discovery”, “tool failures”, “turn limit”, or “recommended next commands” as partial or failed results.
-   - If the result is partial, rerun a narrower subagent task or tell the user you are switching to manual work.
-6. Before editing, the parent must still read the exact target file regions and make minimal, verified edits.
-7. For meaningful implementation risk, run a review loop: writer subagent or parent edit, fresh reviewer, parent synthesis, then validation.
+3. **Scale effort to complexity.** Encode explicit rules:
 
-## RUG Loop: Repeat Until Good
-For larger tasks, use a manager-style loop:
+   | Task shape | Pipeline |
+   |---|---|
+   | Simple fact-finding / 1-tool lookup | 1 scout, 0–1 reviewer, no planner overhead |
+   | Multi-step single-domain work | planner → worker → reviewer |
+   | Breadth-first / parallelizable / multi-domain | planner → N parallel specialists (each in its own worktree or scope) → integrator/reviewer |
+   | Long-running, high-stakes change | planner → N workers in serial phases → reviewer per phase → final integrator |
 
-1. **Decompose** the request into independently completable tasks.
-2. **Track progress** with a todo list when available; mark items complete only after validation passes.
-3. **Research** first for non-trivial tasks: find relevant files, existing patterns, dependencies, and risks.
-4. **Implement** with one or more bounded worker tasks. Prefer one file or one logical concern per worker task.
-5. **Validate** each worker result with a separate fresh reviewer; never rely only on the worker's self-assessment.
-6. **Repair** failures by launching a new worker prompt containing the original task plus the validation report.
-7. **Integrate** with a final reviewer pass when multiple tasks or files changed.
-8. **Report** only after all tracked tasks are done or after clearly explaining why the loop must stop.
+   Do not burn 15× tokens on a 1-tool-call lookup. Do not skip a reviewer on a multi-file
+   refactor.
 
-Use this loop strictly when the user requests pure orchestration or the task has meaningful risk. Use a lighter version for ordinary tasks.
+4. **Evaluate the synthesis before returning.** Before handing the result back to the user, the
+   orchestrator must check:
+   - **Coverage** — every part of the original request is addressed.
+   - **Validity** — subagent output is judged against the contract, not trusted on faith.
+   - **Consistency** — sibling subagents that touched overlapping concerns agree.
 
-## Prompt Contract Template
-Use a compact, bounded prompt like this:
+5. **Pass context explicitly, every time.** The subagent only knows what is in the task prompt.
+   Missing a critical detail is the orchestrator's failure, not the worker's. The contract
+   template below is the only sanctioned way to pass context.
 
-```text
-Goal: <one concrete outcome>.
+## Subagent Chaining Rule
 
-Context:
-- Repo: <path or package>.
-- User goal: <brief restatement>.
-- Known decisions/constraints: <bullets>.
+Decomposition is the orchestrator's job. The chain runs **`orchestrator → subagent → orchestrator → subagent`**, never `subagent → subagent`.
 
-Scope:
-- Read only: <paths/globs>, or
-- Edit only: <paths/globs>.
-- Do not inspect or edit unrelated areas unless required; explain if you must expand scope.
+A subagent must never spawn, dispatch, or invoke another subagent. If a subagent's task
+discovers work that needs a different role, it reports the gap back to the orchestrator in its
+output and the orchestrator decides what to dispatch next.
 
-Questions to answer / tasks:
-1. <specific question or task>
-2. <specific question or task>
+This rule is encoded as a **forbidden action** in every agent template.
 
-Output format:
-- Current flow summary: max <N> bullets.
-- Proposed changes or findings grouped by file.
-- Risks / edge cases.
-- Validation commands or checks.
+## The Structured Handoff Contract (Mandatory)
 
-Constraints:
-- <read-only / no raw logs / no broad refactors / preserve compatibility / etc.>
-```
-
-## Read-Only Scout Prompt (one file, one question)
-
-For narrow recon of a single file, the parent can use a tight scout template that constrains the agent to one file, one question, and forbids code suggestions. This is the lowest-cost, fastest scout shape.
+Every dispatch from the orchestrator to a subagent must include a handoff contract built from
+this template. Fill every field. If a field does not apply, write `n/a` and explain why —
+do not omit it.
 
 ```text
-Goal: <one concrete fact you need>
+## Handoff Contract
 
-Read ONLY this one file: <exact path>
+### Objective
+<one or two sentences: what success looks like>
 
-Question: <one specific question, 1-3 lines of expected output>
+### Context (passed by orchestrator)
+- Repo / working dir: <path>
+- User goal: <restatement in your own words>
+- Prior phase outputs: <paths to artifacts, or one-line summaries>
+- Constraints / user-specified tech: <bullets — frameworks, libraries, versions, "do not use X">
+- Reference material: <file paths the subagent should read; do not paste contents>
 
-Output: <exact format, e.g. "6 lines: name = #HEX">
+### Scope Boundary
+- In scope: <paths, globs, concerns>
+- Out of scope: <paths, globs, concerns>
+- If you must expand scope, STOP and report why — do not silently broaden.
 
-Constraints:
-- max_turns 3
-- Do not read any other file
-- Do not suggest code or next steps
-- If info is missing, say so and stop
+### Allowed Tools
+<explicit list. Examples:>
+- read-only: read, bash (for rg/git/find only), grepsearch, websearch, web_fetch, codesearch, context7
+- implementer: + edit, write
+- never grant a scout write tools, never grant a reviewer write tools
+
+### Forbidden Actions
+<explicit list. Examples:>
+- do not write or modify any file
+- do not spawn or invoke another subagent
+- do not edit files in <list>
+- do not run destructive commands (rm -rf, force push, etc.)
+- do not substitute the user-specified technology with an alternative
+
+### Output Schema
+<exact structure the subagent must return. See per-role schemas below.>
+
+### Success Criteria
+<bulleted list the orchestrator will use to judge the output. Each item must be checkable.>
+
+### Length budget (Summarizer only; n/a otherwise)
+<target word count, e.g., 500 words, or "1 paragraph">
+
+### Audience (Summarizer only; n/a otherwise)
+<who reads the summary, e.g., "engineering lead" or "user via UI">
+
+### Fallback Behavior
+- If blocked: <report blocker + partial findings; do not fabricate a workaround>
+- If out of scope: <report the gap and stop>
+- If ambiguous: <state the ambiguity, list the interpretations you considered, pick the safest, explain>
+- If input contract is incomplete: <REFUSE — see refusal guard below>
+
+### Artifact Path (if output is large or shared with other subagents)
+- Write full output to: <absolute path>
+- Return to orchestrator: one-line summary + path
 ```
 
-The "Read ONLY this one file" and "If info is missing, say so and stop" lines are the actual cost levers — they keep the tool-call count at 1 and prevent repo-wide crawls.
+### Per-Role Output Schemas
 
-## Worker Prompt Template
-When delegating implementation, include the original request and make the scope non-ambiguous:
+The `Output Schema` slot is filled with one of these role-specific structures.
 
+**Scout (read-only recon):**
 ```text
-CONTEXT: The user asked: "<original request>"
+## Findings
+- <file:line> — <fact, 1 line>
 
-YOUR TASK: <specific decomposed implementation task>
+## Open questions
+- <question that this recon could not answer>
 
-INPUT FINDINGS:
-- <researcher findings, relevant paths, existing patterns, decisions>
+## Confidence
+- high | medium | low — <one-line reason>
 
-SCOPE:
-- Files to modify: <list>
-- Files to create: <list>
-- Files to not touch: <list>
-
-REQUIREMENTS:
-- <requirement 1>
-- <requirement 2>
-
-SPECIFIED TECHNOLOGIES / APPROACHES:
-- The user specified: <libraries, languages, frameworks, approach>
-- You MUST use these exactly. Do NOT substitute alternatives or rewrite in another stack.
-
-ACCEPTANCE CRITERIA:
-- [ ] <criterion 1>
-- [ ] <criterion 2>
-
-CONSTRAINTS:
-- Do NOT modify unrelated files.
-- Do NOT broaden scope without explaining why.
-- Do NOT return partial work as complete.
-
-WHEN DONE, REPORT:
-1. Files created/modified.
-2. Summary of changes.
-3. Tests/checks run and results.
-4. Any issues or concerns.
-5. Confirmation for each acceptance criterion.
+## Tool calls used
+- <count>
 ```
 
-## Reviewer Prompt Template
-After implementation, validate with a separate subagent:
-
+**Planner (phased plan, no edits):**
 ```text
-A previous agent was asked to: <task description>
+## Plan
+### Phase 1: <name>
+- Steps: <numbered bullets>
+- Files touched: <list>
+- Verification: <how to check this phase>
+### Phase 2: <name>
+...
 
-Acceptance criteria:
-- <criterion 1>
-- <criterion 2>
+## Spec compliance
+- User specified: <tech> — plan uses: <tech> — pass | flag
 
-User-specified technologies / approaches:
-- <specs that must be obeyed>
+## Risks
+- <risk — mitigation>
 
-Validate by:
-1. Reading the files that were supposedly changed.
-2. Checking each acceptance criterion against the actual implementation.
-3. Checking specification compliance. If the user required X and the implementation used Y instead, fail validation even if Y works.
-4. Looking for bugs, missing edge cases, regressions, security issues, and unnecessary complexity.
-5. Running relevant tests or type checks if allowed.
-
-Report:
-- Specification compliance: pass/fail with evidence.
-- Changed-file summary.
-- Failed items with concise evidence.
-- Bugs, missing functionality, or risks.
-- Overall verdict: PASS or FAIL.
+## Open questions
+- <question for the user or for a follow-up scout>
 ```
 
-## Specification Adherence
-User-specified technologies, languages, frameworks, libraries, and approaches are hard constraints. Every worker and reviewer prompt should echo them explicitly and forbid substitutions.
+**Worker (bounded implementation):**
+```text
+## Files changed
+- <path> — <one-line what changed>
 
-Common failure pattern: a subagent replaces the requested tool or stack with its own preference. Prevent this in the worker prompt and make the reviewer fail the work if substitution occurred.
+## Acceptance criteria
+- [x] <criterion> — <evidence: file:line, command output, etc.>
+- [ ] <criterion not met> — <reason>
+
+## Tests / checks run
+- <command> — <result>
+
+## Follow-ups / risks
+- <item>
+
+## Spec compliance
+- User specified X — implementation uses X — pass | fail
+```
+
+**Reviewer (read-only validation):**
+```text
+## Specification compliance
+- <criterion>: pass | fail — <evidence>
+
+## Spec adherence
+- User specified: <tech> — worker used: <tech> — pass | fail
+
+## Out-of-scope findings
+- <observation> — note: not in contract, do not act on this
+
+## Changed files reviewed
+- <path> — <one-line observation>
+
+## Bugs / regressions
+- <bug — file:line — severity>
+
+## Missing edge cases
+- <case>
+
+## Verdict
+PASS | FAIL — <one-line summary>
+```
+
+**Summarizer (compress prior outputs):**
+```text
+## Summary
+- <bullet — preserves action items verbatim>
+
+## Key artifacts
+- <path> — <one-line what it contains>
+
+## Decisions captured
+- <decision — rationale>
+
+## Open threads
+- <item still in flight>
+
+## Lost detail (call out, do not silently drop)
+- <category of detail the source contained that the summary does not cover>
+```
+
+## Filesystem-Based State
+
+When subagent output is too large to inline, or when multiple subagents need to coordinate on
+a shared artifact, the orchestrator passes **paths**, not contents.
+
+- The orchestrator declares an `Artifact Path` in the handoff contract.
+- The subagent `write`s the full output to that path and returns a one-line summary + the path.
+- The orchestrator (or the next subagent) reads the path when it needs the full content.
+- Originals are kept alongside summaries so context loss is recoverable.
+
+Use filesystem state when:
+
+- The subagent output exceeds ~50 lines or includes diffs, logs, or structured data.
+- Two or more subagents need to share an intermediate result.
+- A long-running work item needs to survive a context truncation.
+
+Do not use filesystem state for small inline answers — it adds a round trip with no benefit.
 
 ## Effort Sizing
-- Quick lookup: `max_turns` about 3-5.
-- Bounded file reconnaissance: about 8-12.
-- Architecture review: more turns only with a narrow scope.
-- Worker implementation: use only after the plan and editable files are clear.
-- For read-only scouts, use the smallest available model that can reliably answer the question. Larger models do not improve single-file lookups; they only add latency and cost.
 
-If the scope is broad, either increase turns or split the work into smaller subagent contracts.
+| Role | Default `max_turns` | Tool budget | When to scale up |
+|---|---|---|---|
+| Scout (1 file, 1 question) | 3 | 1–3 tool calls | Never — split into multiple scouts if scope is wider |
+| Scout (bounded area) | 8 | 5–10 tool calls | Architecture review with multiple files |
+| Planner | 8 | Read-only | Multi-component changes with cross-file dependencies |
+| Worker | 25 | Edits + tests | Bounded file list, clear acceptance criteria |
+| Reviewer | 10 | Read-only | Phased work or a long diff |
+| Summarizer | 5 | Read-only | Long log, multi-phase synthesis |
+
+If the scope is broader than these budgets allow, **split the contract** — do not just raise
+`max_turns`. A stuck agent is usually an over-scoped agent.
+
+For read-only scouts, dispatch with the smallest available model that can reliably answer the
+question. Larger models do not improve single-file lookups; they only add latency and cost.
 
 ## Parallelization Rules
-Parallelize only independent, mostly read-only tasks, such as separate schema, API/docs, and UI-pattern investigations.
 
-Do not parallelize:
+> This section uses the Codex adapter / Pi harness API (specifically `run_in_background: true` and `get_subagent_result`). Adapt the API calls to your harness equivalents if you are not on the Codex adapter / Pi.
 
-- multiple agents editing the same file;
+Parallelize only **independent** subagent dispatches. Two subagents are independent when their
+contracts have no shared files, no shared artifact, and no causal dependency on each other's
+output.
+
+**Do not parallelize:**
+
 - a worker writing code before scout/planner results are synthesized;
-- parent doing the same exploration while a scout is running;
-- nested handoff assumptions unless the harness explicitly supports them.
+- multiple agents editing the same file or even the same logical concern;
+- a scout on file A and another scout whose answer depends on A's output;
+- parent doing the same exploration while a scout is running.
 
-## Parallel Launch Pattern
-
-For independent, read-only questions, launch all subagents in a single tool block with `run_in_background: true`, then wait on all of them in a separate tool block. Wall time becomes the slowest agent instead of the sum.
+**Parallel launch pattern** (when independent):
 
 ```text
-// Launch all 3 in one tool block with run_in_background: true
-subagent({ prompt: "...", subagent_type: "scout", model: "<small read-only model>", max_turns: 3, run_in_background: true })
-subagent({ prompt: "...", subagent_type: "scout", model: "<small read-only model>", max_turns: 3, run_in_background: true })
-subagent({ prompt: "...", subagent_type: "scout", model: "<small read-only model>", max_turns: 3, run_in_background: true })
+// Launch all in one tool block with run_in_background: true
+subagent({ prompt: <contract>, subagent_type: "scout", model: "<small read-only model>", max_turns: 3, run_in_background: true })
+subagent({ prompt: <contract>, subagent_type: "scout", model: "<small read-only model>", max_turns: 3, run_in_background: true })
 
-// Then in the next tool block, wait on all 3 in parallel
+// Then in the next tool block, wait on all in parallel
 get_subagent_result({ agent_id: "<id-1>", wait: true })
 get_subagent_result({ agent_id: "<id-2>", wait: true })
-get_subagent_result({ agent_id: "<id-3>", wait: true })
 ```
 
-Combine with a `max_turns: 3` cap so a stuck agent cannot blow the budget. A turn cap is what stops the agent; prompt discipline is what shapes its answer.
+Always pair parallel dispatch with a `max_turns` cap so a stuck agent cannot blow the budget.
 
-## Anti-Patterns
-- **“Let me just quickly...”**: the parent duplicates delegated research instead of launching or narrowing a subagent task.
-- **Monolithic delegation**: one subagent is asked to research, plan, implement, test, and review a large change.
-- **Trusting self-reported completion**: the worker says it is done but no reviewer verifies actual files and criteria.
-- **Role confusion**: reviewer used for research, worker used for broad exploration, researcher asked to edit.
-- **Spec substitution**: the implementation swaps out the user's specified technology or approach.
-- **Giving up after one failed validation**: retry with a better, narrower prompt unless the user constraints make completion impossible.
-- **Multi-question agents**: one scout asked 8 unrelated questions explodes tool uses and turn count. One file, one question per scout; parallelize the rest.
-- **Code suggestions in recon**: asking a scout to "also propose an implementation" turns a 1-call lookup into a full design pass. Recon only.
+## Anti-Patterns (Hard "Do NOT" List)
 
-## Plan Mode and Handoff Notes
-- Use planning/research subagents to gather context before presenting a plan.
-- A plan may describe future handoffs by target role, objective, scope, expected output, and validation.
-- Do not assume a plan tool should automatically execute subagents. The parent orchestrator should perform accepted handoffs with available subagent tooling.
-- Avoid recursive or unbounded delegation; subagents should not create open-ended nested handoffs.
+The orchestrator must not:
+
+- **Context Telephone** — pass summaries-of-summaries across handoffs. **Mitigation:** every
+  handoff uses the structured contract above; originals (paths to source artifacts) are
+  available alongside any summary.
+- **God Agent** — pack research, plan, implement, test, and review into one subagent.
+  **Mitigation:** phase decomposition; each agent owns exactly one role with one output schema.
+- **Context Stuffing** — overload a subagent with all docs, the whole repo, or a wall of past
+  conversation. **Mitigation:** apply the five-strategy framework — *select* the smallest
+  relevant slice, *compress* to paths + one-line summaries, *order* by what the agent reads
+  first, *isolate* by passing one concern per dispatch, *format* with the contract schema.
+- **Premature Parallelization** — run dependent tasks in parallel. **Mitigation:** map the DAG
+  first; only dispatch independent contracts concurrently.
+- **Silent Failure Cascade** — let one phase's failure propagate to the next.
+  **Mitigation:** phase-gate validation. After every subagent returns, the orchestrator judges
+  the output against `Success Criteria` and either accepts, reruns a narrower contract, or
+  surfaces the gap to the user. Never proceed on "the worker said it was done".
+- **Scope Creep Spiral** — a subagent expanding scope until context exhausts.
+  **Mitigation:** explicit `Scope Boundary` and `Acceptance Criteria` in every contract; the
+  refusal guard below forces a stop when scope is exceeded.
+- **Subagent Spawning Subagents** — a worker or scout dispatching its own sub-subagents.
+  **Mitigation:** the chain rule above; this is encoded as a forbidden action in every
+  agent template.
+
+The orchestrator's most common failure mode is the first one: duplicating delegated work in
+the parent because the contract was too loose. If a subagent result looks weak, narrow the
+contract and rerun — do not start reading the same files in the parent.
+
+## Per-Role Refusal Guards
+
+Every agent template includes a refusal guard: if a required input is missing, the agent
+must **refuse and ask** instead of producing reasonable-but-wrong output. The orchestrator
+treats a refusal as a contract defect, not a worker failure, and fixes the prompt.
+
+Examples:
+
+- Scout with no path or no question → refuse: "Need a file path and a specific question."
+- Worker with no acceptance criteria → refuse: "Need at least 3 checkable acceptance criteria."
+- Reviewer with no changed-files list → refuse: "Need the list of files to review."
+- Planner with no user goal → refuse: "Need a one-sentence user goal to plan against."
+
+## Specification Adherence
+
+User-specified technologies, languages, frameworks, libraries, and approaches are hard
+constraints. Every worker and reviewer contract must echo them in `Constraints` and the
+reviewer must fail the work if substitution occurred.
+
+Common failure: a worker swaps the requested tool or stack for its own preference. The
+contract must forbid the substitution explicitly and the reviewer must check.
 
 ## Failure Handling
-When a subagent returns a partial result, say so explicitly and choose one path:
 
-- rerun a narrower subagent with a tighter contract;
-- ask the user whether to proceed manually;
-- proceed manually only after announcing the switch and keeping parent exploration minimal.
+When a subagent returns a partial result, the orchestrator chooses one path:
 
-Do not silently ignore a weak subagent result and duplicate its full task in the parent.
+1. **Rerun narrower** — re-dispatch with a tighter contract (smaller scope, more specific
+   question, lower `max_turns` cap).
+2. **Escalate to user** — surface the gap and ask the user how to proceed.
+3. **Switch to manual** — proceed in the parent, but only after announcing the switch and
+   keeping parent exploration minimal.
+   - Switch to manual **only** for trivial follow-ups (single short answer, single file read
+     for a sanity check).
+   - For anything bigger, re-dispatch a narrower contract or escalate to the user.
+   - The orchestrator must not re-do the subagent's task in the parent. The contract template
+     and the orchestrator's role forbid this.
+
+Never silently ignore a weak subagent result and never duplicate the full subagent task in
+the parent.
+
+## Validation Checklist (Before Returning to User)
+
+- [ ] Every dispatched subagent ran with `inherit_context: false`.
+- [ ] Every handoff contract had all eleven fields filled (Objective, Context, Scope Boundary,
+      Allowed Tools, Forbidden Actions, Output Schema, Success Criteria, Length budget, Audience,
+      Fallback Behavior, Artifact Path).
+- [ ] Subagent outputs were judged against `Success Criteria`, not trusted on self-report.
+- [ ] Coverage check passed — every part of the original request is addressed.
+- [ ] No subagent spawned another subagent.
+- [ ] Scope was not silently broadened in any phase.
+- [ ] User-specified tech was preserved (worker did not substitute, reviewer checked).
 
 ## Sources
+
 - OpenAI Codex: Subagents — `https://developers.openai.com/codex/concepts/subagents`
 - Claude Code: Create custom subagents — `https://code.claude.com/docs/en/sub-agents`
 - Claude Code SDK: Subagents — `https://code.claude.com/docs/en/agent-sdk/subagents`
 - Claude Code: Dynamic workflows — `https://code.claude.com/docs/en/workflows`
 - Anthropic: How we built our multi-agent research system — `https://www.anthropic.com/engineering/multi-agent-research-system`
 - Anthropic: Building effective agents — `https://www.anthropic.com/research/building-effective-agents`
-
-## Verification
-- Subagent prompts include objective, scope, constraints, output format, and validation.
-- Parent validates subagent output quality before acting on it.
-- Parent does not duplicate delegated work without an explicit strategy switch.
-- Write-heavy work is serialized or bounded to non-overlapping files.
+- Anthropic: Effective context engineering for AI agents — `https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents`

@@ -5,10 +5,11 @@
 `personal-context-files` provides rtango rules, skill definitions, collections, and agent
 prompt templates for my personal Pi agent workflows.
 
-This repo is aligned with my Pi setup using the Codex adapter from `personal-pi-extensions`:
-agent templates should use Codex-style `exec_command` / `write_stdin` / `apply_patch` tooling
-plus the separate `websearch` / `web_fetch` / `codesearch` / `context7` tools. Native Codex
-adapter `web.run` is intentionally disabled and should not be listed in repo agent templates.
+This repo is aligned with my Pi setup using Pi's **native** built-in tools
+(`read`, `bash`, `edit`, `write`) plus the separate `websearch` / `web_fetch` / `codesearch` /
+`context7` / `grepsearch` tools. The Codex adapter from `personal-pi-extensions` is intentionally
+not used by these agent templates; do not reference `exec_command`, `write_stdin`, `apply_patch`,
+`view_image`, or `image_generation` in any agent frontmatter or skill body.
 
 TypeScript extensions and tooling live in `personal-pi-extensions/`.
 
@@ -27,7 +28,7 @@ TypeScript extensions and tooling live in `personal-pi-extensions/`.
 
 - `collections/general-agents.yaml` — curated upstream general-purpose agent skills
 - `collections/general-engineering.yaml` — curated upstream engineering workflow skills
-- `collections/dev-team.yaml` — personal Pi + Codex adapter team agents and handoff skills
+- `collections/dev-team.yaml` — personal Pi dev team agents and handoff skills
 - `collections/grepai.yaml` — official creator-managed GrepAI semantic code search skills
 - `collections/github.yaml` — repo-local GitHub collaboration skills
 - `collections/gitlab.yaml` — repo-local GitLab collaboration skills
@@ -62,3 +63,7 @@ TypeScript extensions and tooling live in `personal-pi-extensions/`.
 - Treat `rtango init` as destructive once a repo is already initialized; do not re-run it unless explicitly wanted.
 - For importing many rules from another repo, prefer `kind: collection` in `.rtango/spec.yaml` and pin the GitHub ref when practical.
 - Avoid editing generated, vendor, or local-secret files unless explicitly needed.
+- All subagent agent templates (`agents/*.agent.md`) run with `inherit_context: false` and
+  follow the context-isolation contract defined in `skills/subagent-orchestration/SKILL.md`.
+  The parent orchestrator passes task context via a structured handoff contract, never via
+  context inheritance. Subagents must not spawn further subagents.

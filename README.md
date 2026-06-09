@@ -3,8 +3,9 @@
 Rtango rules and markdown-based content for my personal Pi agent workflows.
 
 This repository is aligned with my Pi setup: Pi runs with the Codex adapter from
-`personal-pi-extensions`, uses Codex-style editing/shell tools, and keeps native
-Codex `web.run` disabled in favor of the separate Pi web/documentation tools.
+`personal-pi-extensions`, but the agent templates in this repo deliberately do not depend
+on the Codex adapter. They use Pi's native built-in tools plus the separate web and docs
+tools. The Codex adapter's `web.run` is intentionally disabled in my setup.
 
 ## Entry point
 
@@ -23,17 +24,16 @@ TypeScript extensions and tooling live in `personal-pi-extensions/`.
 
 ## Tool alignment
 
-The agent templates in `agents/` are written for this personal Pi + Codex adapter setup.
+The agent templates in `agents/` are written for Pi using its **native** built-in tools,
+not the Codex adapter.
 
-- Code reading, repository search, builds, and tests: `exec_command`
-- Interactive process stdin/polling: `write_stdin`
-- File edits: `apply_patch`
-- Local image inspection and generation: `view_image`, `image_generation`
-- Web and docs lookup: `websearch`, `web_fetch`, `codesearch`, `context7`
+- Code reading, repository search, builds, and tests: `read`, `bash`
+- File edits: `edit` (surgical replacements), `write` (new files or full rewrites)
+- Web and docs lookup: `websearch`, `web_fetch`, `codesearch`, `context7`, `grepsearch`
 
-Do not assume Pi's built-in `read`, `bash`, `edit`, or `write` tools are available to these
-templates, and do not use Codex adapter native `web.run` here; it is intentionally disabled in
-my setup.
+Do not add Codex adapter tools (`exec_command`, `write_stdin`, `apply_patch`, `view_image`,
+`image_generation`) to the frontmatters — they are not Pi native. Do not use the Codex
+adapter's native `web.run` here either; it is intentionally disabled in my setup.
 
 ## Checks
 
@@ -96,6 +96,17 @@ Creates a reviewer-focused GitLab merge request from the current branch using `g
 
 User-callable handoff wrapper that commits current changes and then opens the matching PR or MR.
 
+### `subagent-orchestration`
+
+Orchestration playbook for the parent agent. Teaches the parent to dispatch subagents in
+**fresh, isolated contexts** (`inherit_context: false`) with a structured handoff contract
+that includes an objective, scope boundary, allowed/forbidden tools, output schema, success
+criteria, and fallback behavior. Subagents never inherit the parent conversation and never
+spawn their own subagents. Use this skill to scale effort to complexity (1-tool lookup vs.
+multi-domain parallel work), pass context explicitly (paths and contracts, not summaries-of-
+summaries), and evaluate the synthesis before returning to the user. The companion agent
+templates (`agents/*.agent.md`) are designed against this contract.
+
 ## Collections
 
 These collection manifests live in `collections/`.
@@ -110,8 +121,13 @@ Curated upstream engineering workflow skills (`collections/general-engineering.y
 
 ### `dev-team`
 
-Personal Pi + Codex adapter dev team (`collections/dev-team.yaml`):
-scout, planner, worker, reviewer, and summarizer agent templates plus commit/PR/MR handoff skills.
+Personal Pi dev team (`collections/dev-team.yaml`):
+scout, planner, worker, reviewer, and summarizer agent templates plus commit/PR/MR handoff
+skills. All five agent templates run in **fresh, isolated contexts** (`inherit_context: false`)
+and expect a structured handoff contract from the orchestrator (see the
+`subagent-orchestration` skill). The agent templates document the input contract they expect,
+the output schema they return, allowed/forbidden tools, and a refusal guard for partial
+handoffs.
 
 ### `grepai`
 

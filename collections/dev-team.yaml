@@ -1,6 +1,8 @@
 version: 1
 # Personal Pi + Codex adapter dev team agents.
 # Source agents are stored in the plain rtango layout under agents/*.agent.md.
+# Agent templates use Pi native built-in tools (read, bash, edit, write); the Codex
+# adapter is intentionally not used by these templates.
 agents:
   - plain
 defaults:
@@ -27,5 +29,9 @@ rules:
     kind: skill
   - id: yeet
     source: skills/yeet
+    schema_agent: pi
+    kind: skill
+  - id: subagent-orchestration
+    source: skills/subagent-orchestration
     schema_agent: pi
     kind: skill

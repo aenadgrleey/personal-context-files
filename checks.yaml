@@ -4,3 +4,4 @@ checks:
   - name: yaml
     command: bash scripts/check-yaml.sh
     description: Validate YAML files with yamllint
+
